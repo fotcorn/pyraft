@@ -3,6 +3,9 @@ import os
 
 from configuration import Configuration
 from state import State
+from http_server import serve_forever
+from raft import Raft
+
 
 def main():
     if len(sys.argv) != 2:
@@ -19,6 +22,12 @@ def main():
 
     state = State()
     state.load(node_name)
+
+    raft = Raft(configuration, state)
+
+    raft.reset_election_timer()
+    serve_forever(raft.parse_json_request)
+
 
 if __name__ == '__main__':
     main()
