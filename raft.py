@@ -4,12 +4,19 @@ from messages import AppendEntryRequest, AppendEntryResponse, RequestVoteRequest
 
 class Raft(object):
 
+    FOLLOWER = 1
+    CANDIDATE = 2
+    LEADER = 3
+
     def __init__(self, node_name, configuration, state):
         self.node_name = node_name
         self.configuration = configuration
+        self.type = Raft.FOLLOWER
         self.state = state
         self.election_timer = None
         self.election_timeout = 0.5 + random.randint(0, 1000) / 1000.0
+        self.leader_timer = None
+        self.leader_timeout = 0.25
 
     def log(self, message, *args):
         print('{}:'.format(self.node_name), message.format(args))
@@ -27,7 +34,12 @@ class Raft(object):
         pass
 
     def handle_append_entry_request(self, message):
-        pass
+        self.reset_election_timer()
+        self.type = Raft.FOLLOWER
+        if self.leader_timer:
+            self.leader_timer.cancel()
+            self.leader_timer = None
+        # TODO: append data
 
     def handle_append_entry_response(self, message):
         pass
