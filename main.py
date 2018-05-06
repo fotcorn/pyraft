@@ -23,7 +23,7 @@ def main():
     state = State()
     state.load(node_name)
 
-    raft = Raft(configuration, state)
+    raft = Raft(node_name, configuration, state)
 
     raft.reset_election_timer()
     serve_forever(raft.parse_json_request)
