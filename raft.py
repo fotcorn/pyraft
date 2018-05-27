@@ -1,6 +1,7 @@
 import threading
 import random
 from messages import AppendEntryRequest, AppendEntryResponse, RequestVoteRequest, RequestVoteResponse
+import requests
 
 class Raft(object):
 
@@ -24,8 +25,12 @@ class Raft(object):
     def parse_json_request(self, json_message):
         self.log('received message: {}', json_message)
 
-    def send_message(self, message):
-        pass
+    def send_message(self, node_name, message):
+        data = {}
+        data['data'] = message.__dict__.copy()
+        data['type'] = message.MESSAGE_TYPE
+        node = self.configuration.nodes[node_name]
+        requests.post('http://{}:{}'.format(node['host'], node['port']), json=data)
 
     def handle_vote_request(self, message):
         pass
@@ -51,4 +56,14 @@ class Raft(object):
         self.election_timer.start()
 
     def handle_election_timeout(self):
-        self.log('election timeout')
+        self.log('Election timeout, switching to candidate state')
+        self.type = Raft.CANDIDATE
+        self.state.voted_for = self.node_name
+        self.state.current_term += 1
+
+        message = RequestVoteRequest(self.state.current_term, self.node_name, 0, 0)
+
+        for node_name in self.configuration.nodes.keys():
+            if node_name == self.node_name:
+                continue
+            self.send_message(node_name, message)

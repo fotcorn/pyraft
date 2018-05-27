@@ -20,7 +20,7 @@ class RequestHandler(server.BaseHTTPRequestHandler):
         self.wfile.write(response)
 
 
-def serve_forever(handler):
-    http_server = server.HTTPServer(('', 8000), RequestHandler)
+def serve_forever(handler, port):
+    http_server = server.HTTPServer(('', port), RequestHandler)
     http_server.handler = handler
     http_server.serve_forever()

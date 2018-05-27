@@ -1,6 +1,8 @@
 
 class AppendEntryRequest(object):
-    def __init__(term, leader, previous_log_index, previous_log_term, entry_key, entry_value, leader_commit_index):
+    MESSAGE_TYPE = 'append_entry_request'
+
+    def __init__(self, term, leader, previous_log_index, previous_log_term, entry_key, entry_value, leader_commit_index):
         self.term = term
         self.leader = leader
         self.previous_log_index = previous_log_index
@@ -11,12 +13,16 @@ class AppendEntryRequest(object):
 
 
 class AppendEntryResponse(object):
+    MESSAGE_TYPE = 'append_entry_response'
+
     def __init__(self, term, success):
         self.term = term
         self.success = success
 
 
 class RequestVoteRequest(object):
+    MESSAGE_TYPE = 'request_vote_request'
+
     def __init__(self, term, candidate, last_log_index, last_log_term):
         self.term = term
         self.candidate = candidate
@@ -25,6 +31,8 @@ class RequestVoteRequest(object):
 
 
 class RequestVoteResponse(object):
+    MESSAGE_TYPE = 'request_vote_response'
+
     def __init__(self, term, vote_granted):
         self.term = term
         self.vote_granted = vote_granted

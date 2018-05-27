@@ -26,7 +26,7 @@ def main():
     raft = Raft(node_name, configuration, state)
 
     raft.reset_election_timer()
-    serve_forever(raft.parse_json_request)
+    serve_forever(raft.parse_json_request, configuration.nodes[node_name]['port'])
 
 
 if __name__ == '__main__':
