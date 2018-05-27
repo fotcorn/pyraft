@@ -6,10 +6,9 @@ class HttpServer(object):
         self.handler_func = handler_func
 
     async def handle(self, request: web.Request):
-        print('request')
         data = await request.json()
-        self.handler_func(data)
-        return web.json_response({'status': 'ok'})
+        response = self.handler_func(data)
+        return web.json_response(response)
 
     def run(self, port):
         app = web.Application()
