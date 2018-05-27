@@ -20,6 +20,6 @@ class State(object):
         self.last_applied = len(self.log)
         self.commit_index = 0
 
-    def reset_leader_data():
+    def reset_leader_data(self):
         self.next_index = {}
         self.match_index = {}

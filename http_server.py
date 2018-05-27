@@ -1,26 +1,17 @@
-from http import server
-import json
+from aiohttp import web
 
 
-class RequestHandler(server.BaseHTTPRequestHandler):
-    def do_POST(self):
-        length = int(self.headers.get('content-length'))
-        content = self.rfile.read(length)
-        data = json.loads(content.decode('utf-8'))
+class HttpServer(object):
+    def __init__(self, handler_func):
+        self.handler_func = handler_func
 
-        self.server.handler(data)
+    async def handle(self, request: web.Request):
+        print('request')
+        data = await request.json()
+        self.handler_func(data)
+        return web.json_response({'status': 'ok'})
 
-        response = json.dumps({'status': 'ok'}).encode('utf-8')
-
-        self.send_response(server.HTTPStatus.OK)
-        self.send_header("Content-type", 'application/json')
-        self.send_header("Content-Length", str(len(response)))
-        self.end_headers()
-
-        self.wfile.write(response)
-
-
-def serve_forever(handler, port):
-    http_server = server.HTTPServer(('', port), RequestHandler)
-    http_server.handler = handler
-    http_server.serve_forever()
+    def run(self, port):
+        app = web.Application()
+        app.add_routes([web.post('/', self.handle)])
+        web.run_app(app, port=port)

@@ -1,7 +1,9 @@
-import threading
 import random
+import aiohttp
+import asyncio
 from messages import AppendEntryRequest, AppendEntryResponse, RequestVoteRequest, RequestVoteResponse
-import requests
+from timer import Timer
+
 
 class Raft(object):
 
@@ -25,12 +27,13 @@ class Raft(object):
     def parse_json_request(self, json_message):
         self.log('received message: {}', json_message)
 
-    def send_message(self, node_name, message):
+    async def send_message(self, node_name, message):
         data = {}
         data['data'] = message.__dict__.copy()
         data['type'] = message.MESSAGE_TYPE
         node = self.configuration.nodes[node_name]
-        requests.post('http://{}:{}'.format(node['host'], node['port']), json=data)
+        async with aiohttp.request('POST', 'http://{}:{}'.format(node['host'], node['port']), json=data) as resp:
+            await resp.json()
 
     def handle_vote_request(self, message):
         pass
@@ -52,18 +55,15 @@ class Raft(object):
     def reset_election_timer(self):
         if self.election_timer:
             self.election_timer.cancel()
-        self.election_timer = threading.Timer(self.election_timeout, self.handle_election_timeout)
-        self.election_timer.start()
+        self.election_timer = Timer(self.election_timeout, self.handle_election_timeout)
 
-    def handle_election_timeout(self):
+    async def handle_election_timeout(self):
         self.log('Election timeout, switching to candidate state')
         self.type = Raft.CANDIDATE
-        self.state.voted_for = self.node_name
         self.state.current_term += 1
-
+        self.state.voted_for = self.node_name
         message = RequestVoteRequest(self.state.current_term, self.node_name, 0, 0)
-
         for node_name in self.configuration.nodes.keys():
             if node_name == self.node_name:
                 continue
-            self.send_message(node_name, message)
+            asyncio.ensure_future(self.send_message(node_name, message))
